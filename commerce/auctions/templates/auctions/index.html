@@ -1,0 +1,45 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Active Listings</h2>
+
+    {% for item in listings_with_bids %}
+       {% with listing=item.listing highest_bid=item.highest_bid %}
+
+        <div class="card mb-3">
+            {% if listing.image_url %}
+                <img src="{{ listing.image_url }}" class="card-img-top" style="max-height: 250px; width: 100%; object-fit: contain;">
+            {% endif %}
+            <div class="card-body">
+                {% if listing.is_closed %}
+                    <p><strong>This Auction is closed.</strong></p>
+
+                    {% if listing.winner %}
+                        <p>🏆 Winner: {{ listing.winner.username }} with bid of ${{ highest_bid.amount }}</p>
+                    {% else %}
+                        <p>No Winner. No bids were placed on this.</p>
+                    {% endif %}
+                {% endif %}
+                <h5 class="card-title">{{ listing.title }}</h5>
+                <p class="card-text">{{ listing.description }}</p>
+                <p><strong>Starting Bid:</strong>${{ listing.starting_bid }}</p>
+                <p><strong>Category:</strong>{{ listing.category }}</p>
+                <p class="text-muted">Posted By {{ listing.owner.username }} on {{ listing.created_at }}</p>
+                <a href="{% url 'listing' listing.id %}" class="btn btn-primary">View Listing</a>
+            </div>
+       
+            {% if not listing.is_closed %}
+                <form action="{% url 'listing' listing.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Add a Watchlist</button>
+                </form>
+            {% endif %}
+       {% endwith %}
+        </div>
+
+    {% empty %}
+        <p>No Active Listings Yet.</p>
+    {% endfor %}    
+
+
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+<h2>{{ listing.title }}</h2>
+<div class="card body">
+    {% if error %}
+        <p class="text-warning"><strong>{{ error }}</strong></p>
+    {% endif %}
+
+    <div class="btn btn-secondry">
+    {% if message %}
+        {{ message }}
+    {% endif %}
+    </div>
+    <div class="card mb-3">
+        {% if listing.image_url %}
+            <img src="{{ listing.image_url }}" class="card-img-top" style="max-height: 250px; object-fit: contain;">
+        {% endif %}
+        <div class="card-body">
+            {% if listing.is_closed %}
+                <p class="text-danger"><strong>This Auction is closed.</strong></p>
+            {% endif %}
+            <h5 class="card-title">{{ listing.title }}</h5>
+            <p class="card-text">{{ listing.description }}</p>
+            <p><strong>Starting Bid: </strong>${{ listing.starting_bid }}</p>
+            <p><strong>Category: </strong>{{ listing.category }}</p>
+            <p>Current Bid: <strong>${{ bid.amount }}</strong></p>
+            <p class="text-muted">Created by {{ listing.owner.username }} at {{ listing.created_at }}</p>
+            <form method="post" action="{% url 'listing' listing.id %}">
+                {% if not listing.is_closed %}
+                    {% csrf_token %}
+                    {% if request.user == listing.owner %}
+                        <input type="hidden" name="action" value="closed_auction">
+                        <button type="submit" class="btn btn-primary">Close Auction</button>
+                    {% endif %}
+                {% endif %}
+            </form>
+            
+        </div>
+        
+
+        {% if not listing.is_closed %}
+            {% if not request.user == listing.owner %}
+                <form method="post" action="{% url 'listing' listing.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="bid">
+                    <input type="number" step="0.01" name="bid" class="form-control mb-2">
+                    <button type="submit" class="btn btn-primary">Place Bid</button>
+                </form>
+            {% else %}
+                <p class="text-danger"><em>You cannot bid on your own listing.</em></p>
+            {% endif %}
+
+        
+
+            <form method="post" action="{% url 'listing' listing.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="comment">
+                <textarea name="comment" class="form-control mb-2"></textarea>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        
+            <form method="post" action="{% url 'listing' listing.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="watchlist" class="mt-2">
+                <button type="submit" class="btn btn-primary">Add to Watchlist</button>
+            </form>
+        {% else %}
+            <p><strong>This Auction is closed. No more bids allowed.</strong></p>
+        {% endif %}
+        
+        <div class="card-body">
+            <h5>Comments</h5>
+            {% for comment in comments %}
+              <p>{{ comment.user }} said : {{ comment.text}}</p>
+            {% empty %}
+                <p>No comments yet.</p> 
+            {% endfor %}
+        </div>
+
+
+    </div>
+</div>
+{% endblock %}
